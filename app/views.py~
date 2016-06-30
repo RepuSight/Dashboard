@@ -1,0 +1,168 @@
+from app import app, lm
+from flask import request, redirect, render_template, url_for, flash,session
+from flask.ext.login import login_user, logout_user, login_required
+from .forms import LoginForm
+from .user import User
+
+
+import json
+from collections import defaultdict
+import os, sys,csv
+from pymongo import MongoClient
+from bson import json_util
+
+# from bson.json_util import dumps, loads
+ip='127.0.0.1'
+dbname="sentiment"
+collectionname="all"
+TopicCategories=["Room","Price","Hygine","Space","View"]
+
+
+
+@app.route('/hotel',methods=["POST"])
+def hotel():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	tags = collection.distinct("Name")
+	client.close()
+	return json.dumps(tags)
+
+@app.route('/sentiment',methods=["POST"])
+def sentiment(self):
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	tags = collection.distinct("Sentiment")
+	client.close()
+	return json.dumps(tags)
+	
+@app.route('/topic',methods=["POST"])
+def  topic():
+	tags=TopicCategories
+	return json.dumps(tags)
+
+
+@app.route('/channel',methods=["POST"])
+def  channel():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	tags = collection.distinct("Channel")
+	client.close()
+	return json.dumps(tags)
+
+@app.route('/competive',methods=["POST"])
+def  competive():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	tags = collection.distinct("Name")
+	data=[]
+	for hotels in tags:
+		name=hotels
+		total_reviews=collection.find({'Name': hotels,}).count()
+		postive_reviews=collection.find({'Name': hotels,'Sentiment':'Postive'}).count()
+		negative_reviews=collection.find({'Name': hotels,'Sentiment':'Negative'}).count()	
+		neutral_reviews=collection.find({'Name': hotels,'Sentiment':'Neutral'}).count()
+		data.append({"Name":name,"MRI":(postive_reviews*2-negative_reviews+0.5*neutral_reviews)/total_reviews,"Total":total_reviews,"Postive":postive_reviews*100/total_reviews,"Negative":negative_reviews*100/total_reviews,"Neutral":neutral_reviews*100/total_reviews})
+	client.close()
+	return json.dumps(data)
+
+@app.route('/getdata',methods=["POST"])
+def  getdata():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	filter =request.get_json(force=True)
+	name=filter['hotel']
+	tags = collection.find({'Name': name})
+	tags1 = {"data":json.loads(json_util.dumps(tags))}
+	client.close()
+	return json.dumps(tags1)
+
+
+@app.route('/queriedhotel',methods=["POST"])
+def  queriedhotel():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	tags = collection.distinct("Name")
+	data=[]	
+	filter =request.get_json(force=True)
+	name=filter['hotel']
+	total_reviews=collection.find({'Name': hotels,}).count()
+	postive_reviews=collection.find({'Name': hotels,'Sentiment':'Postive'}).count()
+	negative_reviews=collection.find({'Name': hotels,'Sentiment':'Negative'}).count()	
+	neutral_reviews=collection.find({'Name': hotels,'Sentiment':'Neutral'}).count()
+	data.append({"Name":name,"MRI":(postive_reviews*2-negative_reviews+0.5*neutral_reviews)/total_reviews,"Total":total_reviews,"Postive":postive_reviews*100/total_reviews,"Negative":negative_reviews*100/total_reviews,"Neutral":neutral_reviews*100/total_reviews})
+	client.close()
+	return json.dumps(data)
+
+@app.route('/sourcesdata',methods=["POST"])
+def  sourcesdata():
+	client = MongoClient(ip, 27017)
+	db = client[dbname]
+	collection=db[collectionname]
+	channel = collection.distinct("Channel")
+	data=[]
+	filter =request.get_json(force=True)
+	name=filter['hotel']
+	total=collection.find({'Name': name}).count()
+	for x in channel:		
+		print collection.find({'Name': name ,'Channel':x}).count()/total
+		data.append({'SourceIndex':collection.find({'Name': name ,'Channel':x}).count()/total,'Channel':x,'Count':collection.find({'Name': name ,'Channel':x}).count(),'PostiveCount':collection.find({'Name': name,'Channel':x,'Sentiment':'Postive'}).count(),'NegativeCount':collection.find({'Name': name,'Channel':x,'Sentiment':'Negative'}).count(),'NeutralCount':collection.find({'Name': name,'Channel':x,'Sentiment':'Neutral'}).count()})
+	return json.dumps(data)
+
+
+@app.route('/')
+def home():
+    return redirect(url_for("login"))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        user = app.config['USERS_COLLECTION'].find_one({"_id": form.username.data})
+        if user and User.validate_login(user['password'], form.password.data) and user[u'status']==u'true':
+            user_obj = User(user['_id'])
+            login_user(user_obj)
+	    session['logged_in'] = True
+	    session['user'] = user            
+	    flash("Logged in successfully!", category='success')
+	    if user['role']=='admin':
+	    	return render_template('admin.html', title='login', form=form)
+            else:
+            	return redirect(request.args.get("next") or url_for("index"))
+        flash("Wrong username or password!", category='error')
+    return render_template('login.html', title='login', form=form)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    logout_user()
+    return redirect(url_for('login'))
+
+
+@app.route('/index', methods=['GET', 'POST'])
+@login_required
+def index():
+    user_obj=session.get('user', None)
+    print user_obj
+    return render_template('index.html')
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    return render_template('profile.html')
+
+
+@lm.user_loader
+def load_user(username):
+    u = app.config['USERS_COLLECTION'].find_one({"_id": username})
+    if not u:
+        return None
+    return User(u['_id'])

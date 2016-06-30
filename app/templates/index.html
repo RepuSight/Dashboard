@@ -1,0 +1,558 @@
+<!doctype>
+<html  lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>RepuSight </title>
+
+     <link rel="shortcut icon" href="http://shrini.kijag.com/wp-content/uploads/2016/04/logo.png" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="http://dhbhdrzi4tiry.cloudfront.net/cdn/sites/foundation.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../static/css/app.css">
+    <link rel="stylesheet" href="../static/css/foundation-datepicker.css">
+    <link href="../static/build/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
+    <script src="../static/build/nv.d3.js"></script>
+    <style>
+        text {
+            font: 12px sans-serif;
+        }
+        svg {
+            display: block;
+        }
+        #chart1 svg {
+            margin: 0px;
+            padding: 0px;
+            width: 1100px;
+            height: 400px;
+        }
+        #chart2 svg {
+            margin: 0px;
+            padding: 0px;
+            width: 1100px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body  ng-app="myApp" ng-controller="Sachin" ng-init="showLoader()">
+
+    <div class="top-bar">
+    <div class="top-bar-left">
+        <a href="/index"><img src="../static/img/logo1.JPG" class="brand-logo"></a>
+    </div>
+    <div class="top-bar-right">
+        <ul class="dropdown menu logout" data-dropdown-menu>
+            <li>
+                <a >User</a>
+                <ul class="menu vertical ">
+                    <li><a href="/profile">Manager</a></li>
+                    <li><a href="/logout">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+    <div>
+        <div class="row filter-bar">
+            <div class="columns large-12">
+                <div class="inline">
+                    <select class="filter-drop filter-select" ng-model="hotelname" ng-options="x for x in test" ng-init=" test[0]">
+                        <!-- <option ng-repeat="row in test" ng-bind="row"></option> -->
+                    </select>
+                </div>
+
+                <div class="inline">
+                    <input type="text" class="span2 filter-drop" value="" id="dpd1" value="02-12-1989 12:05" placeholder="Enter Start Date" ng-model="startdate">
+                </div>
+
+                <div class="inline">
+                    <input type="text" class="span2 filter-drop" value="" id="dpd2" placeholder="Enter End Date" ng-model="enddate">
+                </div>
+
+                <div class="inline">
+                    <div class="button primary margin" ng-click="getchart()">Run Model</div>
+                </div>
+            </div>
+        </div>
+        <ul class="tabs" data-tabs id="example-tabs">
+            <li class="tabs-title is-active">
+                <a href="#panel1"  aria-selected="true">Scorecard</a>
+            </li>
+            <li class="tabs-title">
+                <a href="#panel2" >Reviews</a>
+            </li>
+            <li class="tabs-title">
+                <a href="#panel3" >Semantic Analysis</a>
+            </li>
+            <li class="tabs-title">
+                <a href="#panel4">Source</a>
+            </li>
+            <li class="tabs-title">
+                <a href="#panel5" >Competitive Analysis</a>
+            </li>
+          <!--   <li class="tabs-title">
+                <a href="#panel6">Social Media</a>
+            </li> -->
+           <!--  <li class="tabs-title">
+                <a href="#panel7">Guest Survey</a>
+            </li> -->
+        </ul>
+        <div class="tabs-content" data-tabs-content="example-tabs">
+            <div class="tabs-panel is-active" id="panel1">
+                <div class="large-12 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th id="instname">Name</th>
+                                    <th id="instname">CSI</th>
+                                    <th id="instname">%Change CSI</th>
+                                    <th id="inst-close">Reviews</th>
+                                    <th id="inst-close">%Change Reviews</th>
+                                     <th id="inst-close">Distribution</th>
+                                     <th id="inst-close">Mentions</th>
+                                    <th id="inst-close">%Change Mentions</td>
+                                     <th id="inst-close">Distribution</th>   
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr ng-repeat="data in queriedhotel" class="overall-table">
+                                  <td ng-bind="data.Name"></td>
+                                    <td ng-bind="data.MRI"></td>
+                                    <td ng-bind="data.MRIchange"></td>
+                                    <td ng-bind="data.Total"></td>
+                                    <td ng-bind="data.Totalchange"></td>                                
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' :negwidth}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                    <td ng-bind="data.mention"></td>
+                                    <td ng-bind="data.topicchange"></td>
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : poswidth1}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' :negwidth1}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : neuwidth1}"></span>
+                                        </div>
+                                    </td>
+                                
+                                </tr>
+                            </tbody>
+                        </table>                    
+                    </div>
+                </div>
+                <div class="large-12 columns">
+                    <div class="panel">
+                        <h5 style="padding-top:10px">Customer Satisfaction Index</h5>
+                       
+                        <div id="chart1">
+                            <svg></svg>
+                        </div>
+
+                    </div>
+                </div>  
+<!-- 
+                <div class="large-12 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <h5>Compitative Analysis</h5>
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th id="instname">Name</th>
+                                    <th id="inst-degree">Customer Satisfaction Index</th> -->
+                                    <!-- <th id="inst-close">Ranking</th>                                    -->
+                              <!--       <th id="inst-closeout">Mention</th>
+                                    <th id="inst-closeout">Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr ng-repeat="data in competive" class="overall-table">
+                                    <td ng-bind="data.Name"></td>
+                                    <td ng-bind="data.MRI"></td> -->
+                                    <!-- <td ng-bind="data.MRI"></td> -->
+                                  <!--   <td ng-bind="data.Total"></td>
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : data.poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' : data.negwidth}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : data.neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                </<tr></tr>>
+                            </tbody>
+                        </table>                    
+                    </div>
+                </div>   -->             
+            </div>
+            <div class="tabs-panel" id="panel2">
+                <div class="large-2 columns filter-area">
+                    <div class="panel search-left">
+                        <label class="filtered-data">Filter Result By</label>
+                        <div class="check-filter" ng-repeat="row in ratingfilter" >
+                            <input id="{{row}}" ng-model="xyz" type="checkbox" ng-click="reviewfilters(row)"><label class="check-data" ng-bind="row" ></label>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <label class="filtered-data">Source</label>
+                        <div class="check-filter" ng-repeat="row in channel" >
+                            <input id="{{row}}" ng-model="xyz" type="checkbox" ng-click="reviewfilters(row)"><label class="check-data" ng-bind="row" ></label>
+                        </div>
+                       
+                    </div>
+                </div>  
+              
+                <div class=" large-10 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th>Total Reviews</th>
+                                    <th>Distribution</th>
+                                    <!-- <th>Positive</th>
+                                    <th>Negative</th>
+                                    <th>Neutral</th> -->
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr class="overall-table">
+                                    <td ng-bind="totalcount"></td>
+                                   <!--  <td ng-bind="positive"></td>
+                                    <td ng-bind="negative"></td>
+                                    <td ng-bind="neutral"></td> -->
+                                     <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' :negwidth}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>                    
+                    </div>
+                </div>
+                <div class=" large-10 columns">
+
+                    <form class="form-inline">
+                        <div class="form-group">
+                            <label >Search</label>
+                            <input type="text" ng-model="search" class="form-control" placeholder="Search">
+                        </div>
+                    </form>
+                    <div class="table-section reviews-panel" style="margin-top:20px;">
+                        <div dir-paginate="data in allreviewdata|filter:search|itemsPerPage:5" class="panel review-subpanel">
+                            <div class="large-3 columns">
+                                <img src="../static/img/zomato.png" alt="logo" class="review-panel-logo">
+                            </div>
+                             <div class="large-9 columns review-data-subpanel">
+                                <label ng-bind="data.Comment"></label>
+                                <span ng-bind="data.Date"></span>
+                                <span class="stars alignright">
+                                    <span ng-style="{ 'width': 16*data.Rating }"></span>
+                                </span>
+                                <a title="send to Facebook" ng-click="sharefb(data)">
+                                      <span>
+                                        <img width="14" height="14" src="https://www.facebookbrand.com/img/fb-art.jpg" alt="Facebook" />  
+                                      </span>
+                                </a>
+                               <p class="review-link"> 
+                                <span ng-bind="data.Channel"></span>
+                                <a ng-click="reviewlink(data.URL)" >Click here to know more..</a></p>
+                            </div>
+                        </div>                  
+                    </div>
+
+                        <dir-pagination-controls
+                           max-size="5"
+                           direction-links="true"
+                           boundary-links="true" >
+                        </dir-pagination-controls>
+                </div> 
+            </div>
+            <div class="tabs-panel" id="panel3">
+                <!-- <div class="all-table large-2 columns filter-area">
+                    <div class="panel senti-left">
+                        <label class="filtered-data">Filter Result By</label>
+                        <div class="check-filter" ng-repeat="row in topic" >
+                            <input id="{{row}}" type="checkbox"><label class="check-data" ng-bind="row"></label>
+                        </div>
+                    </div>
+
+                    <div class="panel senti-left">
+                        <label class="filtered-data">Source</label>
+                        <div class="check-filter" ng-repeat="row in channel" >
+                            <input id="{{row}}" type="checkbox"><label class="check-data" ng-bind="row"></label>
+                        </div>
+                    </div>
+                </div>   -->
+                <div class="all-table senti-area large-12 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th id="inst-closeout" ng-click="orderByField='topic'; reverseSort = !reverseSort">Topice</th>
+                                    <th id="inst-closeout" ng-click="orderByField='mri'; reverseSort = !reverseSort">Customer Satisfaction Index</th>
+                                    <th id="inst-closeout" ng-click="orderByField='mrichange'; reverseSort = !reverseSort">% Change CSI</th>
+                                    <th id="inst-closeout" ng-click="orderByField='mention'; reverseSort = !reverseSort">Mentions</th>
+                                    <th id="inst-closeout" ng-click="orderByField='mentionchange'; reverseSort = !reverseSort">% Change Mentions</th>
+                                    <th id="inst-closeout">Distribution</th>
+                                    <!-- <th id="inst-closeout">Neutral</th>
+                                    <th id="inst-closeout">Negative</th>
+                                    <th id="inst-closeout">Postive</th> -->
+                                    <!-- <th id="inst-closeout">Distribution</th> -->
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr ng-repeat="data in topicdata | orderBy:orderByField:reverseSort" class="overall-table">
+                                    <td ng-bind="data.topic"></td>
+                                    <td ng-bind="data.mri"></td>
+                                    <td ng-bind="data.mrichange"></td>
+                                    <td ng-bind="data.mention"></td>  
+                                    <td ng-bind="data.mentionchange "></td>  
+                                   <!--  <td ng-bind="data.Neutral"></td>
+                                    <td ng-bind="data.Negative"></td>
+                                    <td ng-bind="data.postive"></td> -->
+
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : data.poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' : data.negwidth}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : data.neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>               
+                    </div>
+                    <!-- <div class="panel">
+                    <h5 style="padding-top:10px">Market Review Index</h5>
+                    <div google-chart chart="createlinkedgraph4" class="graphspie"></div>
+                    </div>
+                            
+                    <div class="panel">
+                    <h5 style="padding-top:10px">Word Cloud</h5>
+                    <div google-chart chart="createlinkedgraph4" class="graphspie"></div>
+                    </div> -->
+
+                </div>                  
+            </div>
+             <div class="tabs-panel" id="panel4">
+                <div class="large-12 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <!-- <h5>Group</h5> -->
+                       <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th id="instname" ng-click="orderByField='Channel'; reverseSort = !reverseSort">Sources</th>
+                                    <th id="inst-degree" ng-click="orderByField='SourceIndex'; reverseSort = !reverseSort">Sources Count</th>
+                                    <th id="inst-degout" ng-click="orderByField='Avgrating'; reverseSort = !reverseSort">Avg Rating</th>
+                                    <th id="inst-close" ng-click="orderByField='Count'; reverseSort = !reverseSort">Reviews</th>
+                                    <th id="inst-close" >Distribution</th>
+                                    <!-- <th id="inst-close">Postive</th>
+                                    <th id="inst-closeout">Negative</th>
+                                    <th id="inst-closeout">Neutral</th> -->
+                                   
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr ng-repeat="data in sourcesdata" class="overall-table">
+                                    <td ng-bind="data.Channel"></td>
+                                    <td ng-bind="data.SourceIndex"></td>
+                                    <td ng-bind="data.Avgrating"></td>
+                                    <td ng-bind="data.Count"></td>
+                                   <!--  <td ng-bind="data.PostiveCount"></td>
+                                    <td ng-bind="data.NegativeCount"></td>
+                                    <td ng-bind="data.NeutralCount"></td> -->
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter red" ng-style="{ 'width' : data.poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' : data.negwidth}"></span>
+                                            <span class="meter green" ng-style="{ 'width' : data.neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                    
+                                </tr>
+                            </tbody>
+                        </table>               
+                    </div>
+                </div>  
+                
+            </div>
+            <div class="tabs-panel" id="panel5">
+                <div class="large-12 columns bottom">
+                    <div class="panel comp-panel">
+                    <h5 style="padding-top:10px">Customer Satisfaction Index</h5>
+                    <div id="chart2">
+                            <svg></svg>
+                        </div>
+                    </div>
+                </div>  
+
+                <div class="large-12 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                         <h5>Compitative Analysis</h5>
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th id="instname" ng-click="orderByField='Name'; reverseSort = !reverseSort">Name</th>
+                                    <th id="inst-degree" ng-click="orderByField='MRI'; reverseSort = !reverseSort">Customer Satisfaction Index</th>
+                                    <!-- <th id="inst-close">Ranking</th>                                    -->
+                                    <th id="inst-closeout" ng-click="orderByField='MRIchange'; reverseSort = !reverseSort">% Change CSI</th>
+                                    <th id="inst-closeout" ng-click="orderByField='Total'; reverseSort = !reverseSort">Mentions</th>
+                                    <th id="inst-closeout" ng-click="orderByField='Totalchange'; reverseSort = !reverseSort">% Change Mentions</th>
+                                    <th id="inst-closeout" >Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr ng-repeat="data in competive | orderBy:orderByField:reverseSort " class="overall-table">
+                                    <td ng-bind="data.Name"></td>
+                                    <td ng-bind="data.MRI"></td>
+                                    <td ng-bind="data.MRIchange"></td>
+                                    <td ng-bind="data.Total"></td>
+                                    <!-- <td ng-bind="data.Totalprev"></td> -->
+                                    <td ng-bind="data.Totalchange"></td>
+                                    <td>
+                                        <div class="progress [small-# large-#] [radius round]">
+                                            <span class="meter green" ng-style="{ 'width' : data.poswidth}"></span>
+                                            <span class="meter blue" ng-style="{ 'width' : data.negwidth}"></span>
+                                            <span class="meter red" ng-style="{ 'width' : data.neuwidth}"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>         
+                    </div>
+                </div>  
+
+               
+                
+            </div>
+            <div class="tabs-panel" id="panel6">
+                <div class="all-table large-2 columns filter-area">
+                    <div class="panel social-left">
+                        <label class="filtered-data">Filter Result By</label>
+                                <div class="check-filter">
+                                    <input id="checkbox1" type="checkbox"><label class="check-data"><i class="fa fa-facebook-square iconsize" aria-hidden="true"></i></label>
+                                </div>
+                                <div class="check-filter">
+                                    <input id="checkbox2" type="checkbox"><label class="check-data"><i class="fa fa-google-plus iconsize" aria-hidden="true"></i></label>
+                                </div>
+                                <div class="check-filter">
+                                    <input id="checkbox2" type="checkbox"><label class="check-data"><i class="fa fa-twitter-square iconsize" aria-hidden="true"></i></label>
+                                </div>
+                                <div class="check-filter">
+                                     <input id="checkbox2" type="checkbox"><label class="check-data"><i class="fa fa-pinterest-square iconsize" aria-hidden="true"></i></label>
+                                </div>
+                                <div class="check-filter">
+                                    <input id="checkbox2" type="checkbox"><label class="check-data"><i class="fa fa-youtube iconsize" aria-hidden="true"></i>
+                            </label>
+                        </div>
+                    </div>
+                </div> 
+                 <div class=" large-10 columns">
+                   
+                </div>
+                 <div class=" large-10 columns">
+                    <div class="table-section" style="margin-top:20px;">
+                        <table style="width: 100%" id="main-table">
+                            <thead class="table-head">
+                                <tr>
+                                    <th>Total Reviews</th>
+                                    <th>Positive</th>
+                                    <th>Negative</th>
+                                    <th>Neutral</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                                <tr class="overall-table">
+                                    <td ng-bind="totalcount"></td>
+                                    <td ng-bind="positive"></td>
+                                    <td ng-bind="negative"></td>
+                                    <td ng-bind="neutral"></td>
+                                </tr>
+                            </tbody>
+                        </table>                    
+                    </div>
+                </div>
+                <div class=" large-10 columns">
+                     <form class="form-inline">
+                        <div class="form-group">
+                            <label >Search</label>
+                            <input type="text" ng-model="search" class="form-control" placeholder="Search">
+                        </div>
+                    </form>
+                    <div class="table-section" style="margin-top:20px;">
+                        <div dir-paginate="data in alldata|filter:search|itemsPerPage:5" class="panel">
+                            <p ng-bind="data.Comment"></p>
+                            <span ng-bind="data.Rating" class="align-right"></span>
+                            <p ng-bind="data.Rating" class="align-right"></span>
+
+
+                        </div>                  
+                    </div>
+
+                        <dir-pagination-controls
+                           max-size="5"
+                           direction-links="true"
+                           boundary-links="true" >
+                        </dir-pagination-controls>
+                    </div> 
+                </div>     
+                
+            </div>
+            <div class="tabs-panel" id="panel7">
+                <div class="all-table large-12 columns">
+                    <div class="main-table-head" ng-show="!countrytable">Overall Performance 7</div>
+                </div>      
+                
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="http://dhbhdrzi4tiry.cloudfront.net/cdn/sites/foundation.js"></script>
+    <script src ="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script src="http://code.ionicframework.com/nightly/js/ionic.bundle.js"></script>
+    <script src="../static/js/app.js"></script>
+    <script src="../static/js/dirpaginate.js"></script>
+    <script src="../static/js/graph.js"></script>
+    <script src="../static/js/foundation-datepicker.js"></script>
+    <script src="http://bouil.github.io/angular-google-chart/ng-google-chart.js"></script>
+    
+    <script>
+        $(document).foundation();
+
+        var nowTemp = new Date();
+        var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+        var checkin = $('#dpd1').fdatepicker({
+            onRender: function (date) {
+                return date.valueOf() < now.valueOf() ? '' : '';
+            }
+        }).on('changeDate', function (ev) {
+            if (ev.date.valueOf() > checkout.date.valueOf()) {
+                var newDate = new Date(ev.date)
+                newDate.setDate(newDate.getDate() + 1);
+                checkout.update(newDate);
+            }
+            checkin.hide();
+            $('#dpd2')[0].focus();
+        }).data('datepicker');
+        var checkout = $('#dpd2').fdatepicker({
+            onRender: function (date) {
+                return date.valueOf() > now.valueOf() ? 'disabled' : '';
+            }
+        }).on('changeDate', function (ev) {
+            checkout.hide();
+        }).data('datepicker');
+
+
+    </script>
+ 
+</body>
+</html>
